@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "EC2 Servers"
+
+Parameters:
+  ImageId:
+    Type: AWS::EC2::Image::Id
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - test
+      - stage
+      - prod
+    Default: dev
+    
+Mappings: 
+  EC2DetailsBasedOnEnv:
+    dev: 
+      instanceType: "t2.nano"
+      volumeSize: 8
+    test: 
+      instanceType: "t2.micro"
+      volumeSize: 10
+    stage: 
+      instanceType: "t2.small"
+      volumeSize: 12
+    prod: 
+      instanceType: "t2.medium"
+      volumeSize: 14
+
+Resources:
+  MyEC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref ImageId
+      InstanceType: !FindInMap [EC2DetailsBasedOnEnv, !Ref Environment, "instanceType"]
+      BlockDeviceMappings: 
+      - DeviceName: "/dev/xvda"
+        Ebs: 
+          VolumeType: "io1"
+          Iops: "200"
+          DeleteOnTermination: "True"
+          VolumeSize: !FindInMap [EC2DetailsBasedOnEnv, !Ref Environment, "volumeSize"]
